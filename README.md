@@ -45,11 +45,6 @@ if (class_exists('\Civi\Firewall\Firewall')) {
 * PHP v7.1+
 * CiviCRM 5.19+
 
-## Requirements
-
-* PHP v7.1+
-* CiviCRM 5.19+
-
 ## Installation
 
 See: https://docs.civicrm.org/sysadmin/en/latest/customize/extensions/#installing-a-new-extension

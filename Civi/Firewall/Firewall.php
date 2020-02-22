@@ -26,7 +26,7 @@ class Firewall {
 SELECT COUNT(*) as eventCount,event_type FROM `civicrm_firewall_ipaddress`
 WHERE access_date >= DATE_SUB(NOW(), {$interval})
 AND ip_address = %1
-GROUP BY ip_address,event_type
+GROUP BY event_type
     ";
 
     $block = FALSE;

@@ -27,6 +27,10 @@
     <comment>IP address used</comment>
     <add>5.19</add>
   </field>
+  <index>
+    <name>index_ip_address</name>
+    <fieldName>ip_address</fieldName>
+  </index>
 
   <field>
     <name>access_date</name>

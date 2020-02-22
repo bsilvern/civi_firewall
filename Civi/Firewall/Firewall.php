@@ -12,7 +12,24 @@ namespace Civi\Firewall;
 
 class Firewall {
 
+  /**
+   * The main entry point that is called from hook_civicrm_config (the earliest point we can intercept via extension).
+   */
   public function run() {
+    if ($this->shouldThisRequestBeBlocked()) {
+      // Block them
+      http_response_code(403); // Forbidden
+      exit();
+    }
+  }
+
+  /**
+   * Perform the actual checks.
+   *
+   * @return bool
+   */
+  public function shouldThisRequestBeBlocked() {
+    // @todo make these settings configurable.
     // If there are more than COUNT triggers for this event within time interval then block
     $interval = 'INTERVAL 2 HOUR';
     $queryParams = [
@@ -48,12 +65,7 @@ GROUP BY event_type
           break;
       }
     }
-
-    if ($block) {
-      // Block them
-      http_response_code(403); // Forbidden
-      exit();
-    }
+    return $block;
   }
 
   /**

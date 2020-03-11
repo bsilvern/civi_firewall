@@ -53,15 +53,13 @@ CREATE TABLE `civicrm_firewall_ipaddress` (
      `ip_address` varchar(255) NOT NULL   COMMENT 'IP address used',
      `access_date` timestamp NOT NULL  DEFAULT CURRENT_TIMESTAMP COMMENT 'When the IP address accessed',
      `event_type` varchar(64) NOT NULL   COMMENT 'The type of event that triggered this log',
-     `source` varchar(255)    COMMENT 'Origin of this access request' 
+     `source` varchar(255)    COMMENT 'Origin of this access request'
 ,
         PRIMARY KEY (`id`)
- 
+
     ,     INDEX `index_ip_address`(
         ip_address
   )
-  
- 
-)ENGINE=InnoDB ROW_FORMAT=DYNAMIC    ;
 
- 
+
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;

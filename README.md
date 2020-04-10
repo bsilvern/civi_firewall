@@ -70,7 +70,7 @@ Thanks to @artfulrobot for testing and writing down some ideas for future develo
 
 ## Release Notes
 
-### 0.2
+### 0.2 / 1.0
 
 * Specify database Engine=InnoDB and Row format = DYNAMIC to resolve installation issues on some database servers.
 

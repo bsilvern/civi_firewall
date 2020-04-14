@@ -11,14 +11,14 @@
 function civicrm_api3_job_firewall_cleanup($params) {
   $results = [];
 
-  if ($params['delete_old'] !== 0 && !empty($params['delete_old'])) {
+  if (!empty($params['delete_old'])) {
     // Delete all locally recorded paymentIntents that are older than 3 months
     $results = \Civi\Api4\FirewallIpaddress::delete()
       ->addWhere('access_date', '<', ['delete_old'])
       ->execute();
   }
 
-  return civicrm_api3_create_success($results, $params);
+  return civicrm_api3_create_success((array) $results, $params);
 }
 
 /**

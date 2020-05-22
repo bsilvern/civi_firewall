@@ -62,4 +62,4 @@ CREATE TABLE `civicrm_firewall_ipaddress` (
   )
 
 
-) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB;

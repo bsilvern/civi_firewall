@@ -67,17 +67,3 @@ Thanks to @artfulrobot for testing and writing down some ideas for future develo
 * Also, should we log when we've denied someone something? I know there's the server logs with 403s. Just thinking that when I've been in this sort of situation, you can never get enough information. e.g. if it's baddies: need to study their behaviour; if it's goodies getting frustrated, good to understand what happened there, too, as it may help solve a supporter relations issue.
 
   *Currently the records are kept in the database table for one month. So you can work out when an IP was blocked - but it does require a bit of calculation.*
-
-## Release Notes
-
-### 1.0.1
-
-* Fix [#5](https://lab.civicrm.org/extensions/firewall/-/issues/5) Api4 related error with Firewall: Cleanup job
-
-### 0.2 / 1.0
-
-* Specify database Engine=InnoDB and Row format = DYNAMIC to resolve installation issues on some database servers.
-
-### 0.1
-
-* Initial Release

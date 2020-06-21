@@ -1,5 +1,9 @@
 ## Release Notes
 
+### 1.0.3
+
+* Regenerate DAO (Data Access Object) files to support changes in CiviCRM 5.27+.
+
 ### 1.0.2
 
 * Don't specify ROW_FORMAT=DYNAMIC when installing (leave it to CiviCRM/database to decide).

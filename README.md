@@ -43,8 +43,8 @@ if (class_exists('\Civi\Firewall\Firewall')) {
 
 ## Requirements
 
-* PHP v7.1+
-* CiviCRM 5.19+
+* PHP v7.2+
+* CiviCRM 5.24+
 
 ## Installation
 
@@ -67,3 +67,10 @@ Thanks to @artfulrobot for testing and writing down some ideas for future develo
 * Also, should we log when we've denied someone something? I know there's the server logs with 403s. Just thinking that when I've been in this sort of situation, you can never get enough information. e.g. if it's baddies: need to study their behaviour; if it's goodies getting frustrated, good to understand what happened there, too, as it may help solve a supporter relations issue.
 
   *Currently the records are kept in the database table for one month. So you can work out when an IP was blocked - but it does require a bit of calculation.*
+
+## Support and Maintenance
+This extension is supported and maintained with the help and support of the CiviCRM community by:
+
+[![MJW Consulting](docs/images/mjwconsulting.jpg)](https://www.mjwconsult.co.uk)
+
+We offer paid [support and development](https://mjw.pt/support) as well as a [troubleshooting/investigation service](https://mjw.pt/investigation).

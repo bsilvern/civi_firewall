@@ -130,3 +130,19 @@ function firewall_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
 function firewall_civicrm_entityTypes(&$entityTypes) {
   _firewall_civix_civicrm_entityTypes($entityTypes);
 }
+
+/**
+ * Implements hook_civicrm_alterLogTables().
+ *
+ * Exclude firewall tables from logging tables since they hold mostly temp data.
+ */
+function firewall_civicrm_alterLogTables(&$logTableSpec) {
+  $tablePrefix = 'civicrm_firewall_';
+  $len = strlen($tablePrefix);
+
+  foreach ($logTableSpec as $key => $val) {
+    if (substr($key, 0, $len) === $tablePrefix) {
+      unset($logTableSpec[$key]);
+    }
+  }
+}

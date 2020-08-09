@@ -10,6 +10,8 @@
  */
 namespace Civi\Firewall;
 
+use Civi\Api4\FirewallCsrfToken;
+
 class Firewall {
 
   /**
@@ -29,7 +31,8 @@ class Firewall {
    * @return bool
    */
   public function shouldThisRequestBeBlocked() {
-    // @todo make these settings configurable.
+    // @todo: If we make these settings configurable we also need to actually *load* the settings earlier
+    //   Settings are not loaded when we are first called from firewall_civicrm_config
     // If there are more than COUNT triggers for this event within time interval then block
     $interval = 'INTERVAL 2 HOUR';
     $queryParams = [
@@ -69,13 +72,19 @@ GROUP BY event_type
   }
 
   /**
-   * Generate and store a CSRF token. Clients will need to retreive and pass this into AJAX/API requests.
+   * Generate and store a CSRF token. Clients will need to retrieve and pass this into AJAX/API requests.
    *
    * @return string
    */
   public static function getCSRFToken(): string {
     $token = base64_encode(openssl_random_pseudo_bytes(32));
-    \CRM_Core_Session::singleton()->set('firewall_csrftoken', $token);
+    $source = [
+      'ip_address' => \CRM_Utils_System::ipAddress(),
+      'contact_id' => \CRM_Core_Session::getLoggedInContactID()
+    ];
+    \Civi\Api4\FirewallCsrfToken::create(FALSE)
+      ->setValues(['token' => $token, 'source' => json_encode($source)])
+      ->execute();
     return $token;
   }
 
@@ -87,7 +96,14 @@ GROUP BY event_type
    * @return bool
    */
   public static function isCSRFTokenValid(string $token): bool {
-    if (!empty($token) && (\CRM_Core_Session::singleton()->get('firewall_csrftoken') === $token)) {
+    if (!empty($token)) {
+      $savedToken = \Civi\Api4\FirewallCsrfToken::get(FALSE)
+        ->addWhere('token', '=', $token)
+        ->addWhere('created_date', '>', \Civi::settings()->get('firewall_csrf_timeout'))
+        ->execute()
+        ->first();
+    }
+    if (!empty($savedToken['token'])) {
       return TRUE;
     }
     \Civi\Firewall\Event\InvalidCSRFEvent::trigger(\CRM_Utils_System::ipAddress(), NULL);

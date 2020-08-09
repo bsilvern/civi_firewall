@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+
+<table>
+  <base>CRM/Firewall</base>
+  <class>FirewallCsrfToken</class>
+  <name>civicrm_firewall_csrf_token</name>
+  <comment>CSRF Tokens issued by firewall extension</comment>
+  <log>false</log>
+
+  <field>
+    <name>id</name>
+    <type>int unsigned</type>
+    <required>true</required>
+    <comment>Unique FirewallCsrfToken ID</comment>
+  </field>
+  <primaryKey>
+    <name>id</name>
+    <autoincrement>true</autoincrement>
+  </primaryKey>
+
+  <field>
+    <name>created_date</name>
+    <type>timestamp</type>
+    <default>CURRENT_TIMESTAMP</default>
+    <required>true</required>
+    <comment>When the token was created</comment>
+  </field>
+
+  <field>
+    <name>token</name>
+    <title>Token</title>
+    <type>varchar</type>
+    <length>255</length>
+    <comment>The CSRF token</comment>
+  </field>
+
+  <field>
+    <name>source</name>
+    <title>Source</title>
+    <type>varchar</type>
+    <length>255</length>
+    <comment>Source of this CSRF token</comment>
+  </field>
+
+</table>

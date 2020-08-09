@@ -1,5 +1,14 @@
 ## Release Notes
 
+### 1.1
+
+* Use a table to store generated CSRF tokens (`civicrm_firewall_csrf_token`).
+
+  *Previously this was stored in the user session but this causes problems if you request more than one token in the same session (eg. by opening multiple payment pages in different browser tabs).*
+
+* Fix issue with cleanup job always deleting all records.
+* Add configurable CSRF token timeout via hidden setting (`firewall_csrf_timeout`) - default 24 hours.
+
 ### 1.0.3
 
 * Regenerate DAO (Data Access Object) files to support changes in CiviCRM 5.27+.

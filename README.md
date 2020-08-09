@@ -44,7 +44,7 @@ if (class_exists('\Civi\Firewall\Firewall')) {
 ## Requirements
 
 * PHP v7.2+
-* CiviCRM 5.24+
+* CiviCRM 5.28+
 
 ## Installation
 
@@ -54,7 +54,12 @@ See: https://docs.civicrm.org/sysadmin/en/latest/customize/extensions/#installin
 
 ## Administration
 
-* Job.Firewall_cleanup: There is a scheduled job which cleans old entries from the `civicrm_firewall_ipaddress` table after 1 month.
+* API3 `Job.Firewall_cleanup`: There is a scheduled job which cleans old records:
+  * From the `civicrm_firewall_ipaddress` table after 1 month.
+  * From the `civicrm_firewall_csrf_token` table after 1 week.
+
+There is a hidden setting `firewall_csrf_timeout` (default "-24 hour") that controls how long generated CSRF tokens
+are valid for. This accepts strings in the PHP interval format (eg. -24 hour, -2 day).
 
 ## Future Development / Ideas
 

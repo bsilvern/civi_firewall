@@ -4,8 +4,8 @@
   <base>CRM/Firewall</base>
   <class>FirewallIpaddress</class>
   <name>civicrm_firewall_ipaddress</name>
-  <comment>FIXME</comment>
-  <log>true</log>
+  <comment>IP addresses logged by firewall</comment>
+  <log>false</log>
 
   <field>
     <name>id</name>
@@ -25,7 +25,6 @@
     <length>255</length>
     <required>true</required>
     <comment>IP address used</comment>
-    <add>5.19</add>
   </field>
   <index>
     <name>index_ip_address</name>
@@ -38,7 +37,6 @@
     <default>CURRENT_TIMESTAMP</default>
     <required>true</required>
     <comment>When the IP address accessed</comment>
-    <add>5.19</add>
   </field>
 
   <field>
@@ -48,7 +46,6 @@
     <length>64</length>
     <required>true</required>
     <comment>The type of event that triggered this log</comment>
-    <add>5.19</add>
   </field>
 
   <field>
@@ -57,7 +54,6 @@
     <type>varchar</type>
     <length>255</length>
     <comment>Origin of this access request</comment>
-    <add>5.19</add>
   </field>
 
 </table>

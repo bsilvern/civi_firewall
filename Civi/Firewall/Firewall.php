@@ -74,24 +74,44 @@ GROUP BY event_type
    * @return string
    */
   public static function getCSRFToken(): string {
-    $token = base64_encode(openssl_random_pseudo_bytes(32));
-    \CRM_Core_Session::singleton()->set('firewall_csrftoken', $token);
-    return $token;
+    $validTo = time() + (int) \Civi::settings()->get('firewall_csrf_timeout');
+    $random = bin2hex(random_bytes(12));
+    $privateKey = CIVICRM_SITE_KEY;
+
+    $publicToken = "$validTo.$random.";
+    $dataToHash = $publicToken . $privateKey;
+
+    $dataToHash .= \CRM_Utils_System::ipAddress();
+
+    // This is the token that we send to the browser, that it must send back.
+    $publicToken .= hash('sha256', $dataToHash);
+    return $publicToken;
   }
 
   /**
    * Check if the passed in CSRF token is valid and trigger InvalidCSRFEvent if invalid.
    *
-   * @param string $token
+   * @param string $givenToken
    *
    * @return bool
    */
-  public static function isCSRFTokenValid(string $token): bool {
-    if (!empty($token) && (\CRM_Core_Session::singleton()->get('firewall_csrftoken') === $token)) {
-      return TRUE;
+  public static function isCSRFTokenValid(string $givenToken): bool {
+    if (!preg_match('/^(\d+)\.([a-f0-9]+)\.([a-f0-9]+)$/', $givenToken, $matches)) {
+      \Civi\Firewall\Event\InvalidCSRFEvent::trigger(\CRM_Utils_System::ipAddress(), 'invalid token');
+      return FALSE;
     }
-    \Civi\Firewall\Event\InvalidCSRFEvent::trigger(\CRM_Utils_System::ipAddress(), NULL);
-    return FALSE;
+    if (time() > $matches[1]) {
+      \Civi\Firewall\Event\InvalidCSRFEvent::trigger(\CRM_Utils_System::ipAddress(), 'expired token');
+      return FALSE;
+    }
+    $dataToHash = "$matches[1].$matches[2]." . CIVICRM_SITE_KEY;
+    $dataToHash .= \CRM_Utils_System::ipAddress();
+    if ($matches[3] !== hash('sha256', $dataToHash)) {
+      \Civi\Firewall\Event\InvalidCSRFEvent::trigger(\CRM_Utils_System::ipAddress(), 'tampered hash');
+      return FALSE;
+    }
+    // OK to continue...
+    return TRUE;
   }
 
 }

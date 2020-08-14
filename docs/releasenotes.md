@@ -1,5 +1,15 @@
 ## Release Notes
 
+### 1.1
+
+* Add Firewall.Getcsrf and Firewall.Getcsrfisvalid APIv3 functions.
+* Change the way we generate/validate CSRF tokens so they do not rely on session (or any) storage:
+
+  *Previously this was stored in the user session but this causes problems if you request more than one token in the same session (eg. by opening multiple payment pages in different browser tabs).*
+
+* Fix parameters for API3 `Job.firewall_cleanup`.
+* Don't log changes to `civicrm_firewall_ipaddress` table.
+
 ### 1.0.3
 
 * Regenerate DAO (Data Access Object) files to support changes in CiviCRM 5.27+.

@@ -17,7 +17,7 @@ return [
         'run_frequency' => 'Daily',
         'api_entity' => 'Job',
         'api_action' => 'firewall_cleanup',
-        'parameters' => 'delete_old=-1 month',
+        'parameters' => 'delete_old_ipaddress=-1 month',
       ],
   ],
 ];

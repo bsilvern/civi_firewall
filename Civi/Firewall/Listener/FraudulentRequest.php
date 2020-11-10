@@ -15,6 +15,7 @@ class FraudulentRequest {
   public function onTrigger(\Civi\Firewall\Event\FraudEvent $event) {
     // Add to firewall ip address log table with timestamp + event type
     \Civi\Api4\FirewallIpaddress::create()
+      ->setCheckPermissions(FALSE)
       ->addValue('ip_address', $event->ipAddress)
       ->addValue('source', $event->source)
       ->addValue('event_type', $event->eventType)

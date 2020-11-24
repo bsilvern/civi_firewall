@@ -32,9 +32,13 @@ class Firewall {
     // @todo make these settings configurable.
     // If there are more than COUNT triggers for this event within time interval then block
     $interval = 'INTERVAL 2 HOUR';
+    $clientIp = \CRM_Utils_System::ipAddress();
+    if (!isset($clientIp)) {
+      return FALSE;
+    }
     $queryParams = [
       // The client IP address
-      1 => [\CRM_Utils_System::ipAddress(), 'String'],
+      1 => [$clientIp, 'String'],
     ];
     $blockFraudAfter = 5;
     $blockInvalidCSRFAfter = 5;

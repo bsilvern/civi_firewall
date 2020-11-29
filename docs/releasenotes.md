@@ -9,6 +9,10 @@ Releases use the following numbering system:
 
 * **[BC]**: Items marked with [BC] indicate a breaking change that will require updates to your code if you are using that code in your extension.
 
+## 1.1.2
+
+* Fix [#15](https://lab.civicrm.org/extensions/firewall/-/issues/15) Firewall breaks `drush cache:rebuild` on Drupal 8.
+
 ## 1.1.1
 
 * Fix [#12](https://lab.civicrm.org/extensions/firewall/-/issues/12) Make sure that the caller (API4) always has permission to write an entry to the firewall log table.

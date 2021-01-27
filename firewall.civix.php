@@ -7,9 +7,9 @@
  * extension.
  */
 class CRM_Firewall_ExtensionUtil {
-  const SHORT_NAME = "firewall";
-  const LONG_NAME = "firewall";
-  const CLASS_PREFIX = "CRM_Firewall";
+  const SHORT_NAME = 'firewall';
+  const LONG_NAME = 'firewall';
+  const CLASS_PREFIX = 'CRM_Firewall';
 
   /**
    * Translate a string using the extension's domain.

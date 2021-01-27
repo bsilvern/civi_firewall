@@ -14,6 +14,7 @@ function civicrm_api3_job_firewall_cleanup($params) {
   if (!empty($params['delete_old_ipaddress'])) {
     // Delete all locally recorded paymentIntents that are older than 3 months
     $results = \Civi\Api4\FirewallIpaddress::delete()
+      ->setCheckPermissions(FALSE)
       ->addWhere('access_date', '<', $params['delete_old_ipaddress'])
       ->execute();
   }

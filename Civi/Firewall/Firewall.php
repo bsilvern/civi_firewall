@@ -28,17 +28,22 @@ class Firewall {
    *
    * @return bool
    */
-  public function shouldThisRequestBeBlocked() {
+  public function shouldThisRequestBeBlocked(): bool {
     // @todo make these settings configurable.
     // If there are more than COUNT triggers for this event within time interval then block
     $interval = 'INTERVAL 2 HOUR';
-    $clientIp = \CRM_Utils_System::ipAddress();
-    if (!isset($clientIp)) {
+    $clientIP = Firewall::getIPAddress();
+    if (!isset($clientIP)) {
       return FALSE;
     }
+    $whitelistIPAddresses = explode(',', \Civi::settings()->get('firewall_whitelist_addresses'));
+    if (in_array($clientIP, $whitelistIPAddresses)) {
+      return FALSE;
+    }
+
     $queryParams = [
       // The client IP address
-      1 => [$clientIp, 'String'],
+      1 => [$clientIP, 'String'],
     ];
     $blockFraudAfter = 5;
     $blockInvalidCSRFAfter = 5;
@@ -85,7 +90,7 @@ GROUP BY event_type
     $publicToken = "$validTo.$random.";
     $dataToHash = $publicToken . $privateKey;
 
-    $dataToHash .= \CRM_Utils_System::ipAddress();
+    $dataToHash .= Firewall::getIPAddress();
 
     // This is the token that we send to the browser, that it must send back.
     $publicToken .= hash('sha256', $dataToHash);
@@ -101,21 +106,61 @@ GROUP BY event_type
    */
   public static function isCSRFTokenValid(string $givenToken): bool {
     if (!preg_match('/^(\d+)\.([a-f0-9]+)\.([a-f0-9]+)$/', $givenToken, $matches)) {
-      \Civi\Firewall\Event\InvalidCSRFEvent::trigger(\CRM_Utils_System::ipAddress(), 'invalid token');
+      \Civi\Firewall\Event\InvalidCSRFEvent::trigger(Firewall::getIPAddress(), 'invalid token');
       return FALSE;
     }
     if (time() > $matches[1]) {
-      \Civi\Firewall\Event\InvalidCSRFEvent::trigger(\CRM_Utils_System::ipAddress(), 'expired token');
+      \Civi\Firewall\Event\InvalidCSRFEvent::trigger(Firewall::getIPAddress(), 'expired token');
       return FALSE;
     }
     $dataToHash = "$matches[1].$matches[2]." . CIVICRM_SITE_KEY;
-    $dataToHash .= \CRM_Utils_System::ipAddress();
+    $dataToHash .= Firewall::getIPAddress();
     if ($matches[3] !== hash('sha256', $dataToHash)) {
-      \Civi\Firewall\Event\InvalidCSRFEvent::trigger(\CRM_Utils_System::ipAddress(), 'tampered hash');
+      \Civi\Firewall\Event\InvalidCSRFEvent::trigger(Firewall::getIPAddress(), 'tampered hash');
       return FALSE;
     }
     // OK to continue...
     return TRUE;
+  }
+
+  public static function getIPAddress() {
+    if (!isset(\Civi::$statics[__CLASS__]['ipAddress'])) {
+      $ipAddress = $_SERVER['REMOTE_ADDR'];
+
+      if (\Civi::settings()->get('firewall_reverse_proxy')) {
+        $reverseProxyHeader = \Civi::settings()->get('firewall_reverse_proxy_header');
+        if (!empty($_SERVER[$reverseProxyHeader])) {
+          // If an array of known reverse proxy IPs is provided, then trust
+          // the XFF header if request really comes from one of them.
+          $reverseProxyAddresses = explode(',', \Civi::settings()->get('firewall_reverse_proxy_addresses'));
+
+          // Turn XFF header into an array.
+          $forwarded = explode(',', $_SERVER[$reverseProxyHeader]);
+
+          // Trim the forwarded IPs; they may have been delimited by commas and spaces.
+          $forwarded = array_map('trim', $forwarded);
+
+          // Tack direct client IP onto end of forwarded array.
+          $forwarded[] = $ipAddress;
+
+          // Eliminate all trusted IPs.
+          $untrusted = array_diff($forwarded, $reverseProxyAddresses);
+
+          if (!empty($untrusted)) {
+            // The right-most IP is the most specific we can trust.
+            $ipAddress = array_pop($untrusted);
+          }
+          else {
+            // All IP addresses in the forwarded array are configured proxy IPs
+            // (and thus trusted). We take the leftmost IP.
+            $ipAddress = array_shift($forwarded);
+          }
+        }
+      }
+      \Civi::$statics[__CLASS__]['ipAddress'] = $ipAddress;
+    }
+
+    return \Civi::$statics[__CLASS__]['ipAddress'];
   }
 
 }

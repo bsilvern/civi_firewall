@@ -9,6 +9,8 @@ use CRM_Firewall_ExtensionUtil as E;
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_config/
  */
 function firewall_civicrm_config(&$config) {
+  // Defaults are not loaded until *after* hook_civicrm_config is called by default
+  \Civi::service('settings_manager')->useDefaults();
   $firewall = new \Civi\Firewall\Firewall();
   $firewall->run();
   _firewall_civix_civicrm_config($config);
@@ -145,4 +147,19 @@ function firewall_civicrm_alterLogTables(&$logTableSpec) {
       unset($logTableSpec[$key]);
     }
   }
+}
+
+/**
+ * Implements hook_civicrm_navigationMenu().
+ */
+function firewall_civicrm_navigationMenu(&$menu) {
+  _firewall_civix_insert_navigation_menu($menu, 'Administer/System Settings', [
+    'label' => E::ts('Firewall Settings'),
+    'name' => 'firewall_settings',
+    'url' => 'civicrm/admin/setting/firewall',
+    'permission' => 'administer CiviCRM',
+    'operator' => 'OR',
+    'separator' => 0,
+  ]);
+  _firewall_civix_navigationMenu($menu);
 }

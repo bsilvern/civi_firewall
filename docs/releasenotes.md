@@ -9,6 +9,12 @@ Releases use the following numbering system:
 
 * **[BC]**: Items marked with [BC] indicate a breaking change that will require updates to your code if you are using that code in your extension.
 
+## 1.2
+
+* Add settings page at *Administer->System Settings->Firewall*.
+* Improve method for retrieving client IP address (handle CiviCRM behind reverse proxy).
+* Implement IP address whitelist.
+
 ## 1.1.3
 
 * Fix permissions issue on 5.28 when running cleanup job.

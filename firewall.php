@@ -9,11 +9,11 @@ use CRM_Firewall_ExtensionUtil as E;
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_config/
  */
 function firewall_civicrm_config(&$config) {
+  _firewall_civix_civicrm_config($config);
   // Defaults are not loaded until *after* hook_civicrm_config is called by default
   \Civi::service('settings_manager')->useDefaults();
   $firewall = new \Civi\Firewall\Firewall();
   $firewall->run();
-  _firewall_civix_civicrm_config($config);
 }
 
 /**

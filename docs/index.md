@@ -2,16 +2,11 @@
 
 This implements a simple firewall for CiviCRM that blocks by IP address in various scenarios.
 
-This is currently a very simple automatic solution with no config and no configuration. It is expected that will change in the future.
-
-## Requirements
-
-* PHP v7.2+
-* CiviCRM 5.24+
-
 ## Installation
 
 See: https://docs.civicrm.org/sysadmin/en/latest/customize/extensions/#installing-a-new-extension
+
+Configure via **Administer->System Settings->Firewall Settings**
 
 ## Usage
 
@@ -48,11 +43,18 @@ $myVars = [
 ];
 ```
 
+OR
+```php
+$firewall = new \Civi\Firewall\Firewall();
+$token = $firewall->generateCSRFToken();
+```
+
 Then in your API/AJAX endpoint check if the token is valid:
 ```php
 if (class_exists('\Civi\Firewall\Firewall')) {
-  if (!\Civi\Firewall\Firewall::isCSRFTokenValid(CRM_Utils_Request::retrieveValue('token', 'String'))) {
-    self::returnInvalid();
+  $firewall = new \Civi\Firewall\Firewall();
+  if (!$firewall->checkIsCSRFTokenValid(CRM_Utils_Request::retrieveValue('token', 'String'))) {
+    self::returnInvalid($firewall->getReasonDescription());
   }
 }
 ```

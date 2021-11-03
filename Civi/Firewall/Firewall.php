@@ -10,7 +10,71 @@
  */
 namespace Civi\Firewall;
 
+use CRM_Firewall_ExtensionUtil as E;
+
 class Firewall {
+
+  /**
+   * The "reason" why a request was blocked or a token was invalid.
+   *
+   * @var string
+   */
+  private $reason = '';
+
+  /**
+   * The user friendly, translateable description for the reason
+   *
+   * @var string
+   */
+  private $reasonDescription = '';
+
+  /**
+   * @return string
+   */
+  public function getReason(): string {
+    return $this->reason;
+  }
+
+  /**
+   * @param string $reason
+   */
+  private function setReason(string $reason) {
+    $this->reason = $reason;
+    switch ($reason) {
+      case 'expiredcsrf':
+        $this->setReasonDescription(E::ts('Session expired. Please reload and try again.'));
+        break;
+
+      case 'invalidcsrf':
+      case 'tamperedcsrf':
+        // Be careful not to give out too much information that could help someone bypass the CSRF check.
+        $this->setReasonDescription(E::ts('Session invalid. Please reload and try again.'));
+        break;
+
+      case 'blockedfraud':
+      case 'blockedinvalidcsrf':
+      default:
+        $this->setReasonDescription(E::ts('Blocked'));
+    }
+  }
+
+  /**
+   * Get the description for the reason
+   *
+   * @return string
+   */
+  public function getReasonDescription(): string {
+    return $this->reasonDescription;
+  }
+
+  /**
+   * Set the description for the reason
+   *
+   * @param string $reasonDescription
+   */
+  private function setReasonDescription(string $reasonDescription) {
+    $this->reasonDescription = $reasonDescription;
+  }
 
   /**
    * The main entry point that is called from hook_civicrm_config (the earliest point we can intercept via extension).
@@ -29,10 +93,11 @@ class Firewall {
    * @return bool
    */
   public function shouldThisRequestBeBlocked(): bool {
+    $this->setReason('');
     // @todo make these settings configurable.
     // If there are more than COUNT triggers for this event within time interval then block
     $interval = 'INTERVAL 2 HOUR';
-    $clientIP = Firewall::getIPAddress();
+    $clientIP = $this->getIPAddress();
     if (!isset($clientIP)) {
       return FALSE;
     }
@@ -62,6 +127,7 @@ GROUP BY event_type
         case 'FraudEvent':
           if ($dao->eventCount >= $blockFraudAfter) {
             $block = TRUE;
+            $this->setReason('blockedfraud');
             break 2;
           }
           break;
@@ -69,6 +135,7 @@ GROUP BY event_type
         case 'InvalidCSRFEvent':
           if ($dao->eventCount >= $blockInvalidCSRFAfter) {
             $block = TRUE;
+            $this->setReason('blockedinvalidcsrf');
             break 2;
           }
           break;
@@ -78,11 +145,23 @@ GROUP BY event_type
   }
 
   /**
-   * Generate and store a CSRF token. Clients will need to retreive and pass this into AJAX/API requests.
+   * Generate a CSRF token. Clients will need to retrieve and pass this into AJAX/API requests.
    *
    * @return string
+   * @throws \Exception
    */
   public static function getCSRFToken(): string {
+    $firewall = new Firewall();
+    return $firewall->generateCSRFToken();
+  }
+
+  /**
+   * Generate a CSRF token. Clients will need to retrieve and pass this into AJAX/API requests.
+   *
+   * @return string
+   * @throws \Exception
+   */
+  public function generateCSRFToken(): string {
     $validTo = time() + (int) \Civi::settings()->get('firewall_csrf_timeout');
     $random = bin2hex(random_bytes(12));
     $privateKey = CIVICRM_SITE_KEY;
@@ -90,7 +169,7 @@ GROUP BY event_type
     $publicToken = "$validTo.$random.";
     $dataToHash = $publicToken . $privateKey;
 
-    $dataToHash .= Firewall::getIPAddress();
+    $dataToHash .= $this->getIPAddress();
 
     // This is the token that we send to the browser, that it must send back.
     $publicToken .= hash('sha256', $dataToHash);
@@ -105,25 +184,46 @@ GROUP BY event_type
    * @return bool
    */
   public static function isCSRFTokenValid(string $givenToken): bool {
+    $firewall = new Firewall();
+    return $firewall->checkIsCSRFTokenValid($givenToken);
+  }
+
+  /**
+   * Check if the passed in CSRF token is valid and trigger InvalidCSRFEvent if invalid.
+   *
+   * @param string $givenToken
+   *
+   * @return bool
+   */
+  public function checkIsCSRFTokenValid(string $givenToken): bool {
+    $this->setReason('');
     if (!preg_match('/^(\d+)\.([a-f0-9]+)\.([a-f0-9]+)$/', $givenToken, $matches)) {
-      \Civi\Firewall\Event\InvalidCSRFEvent::trigger(Firewall::getIPAddress(), 'invalid token');
+      \Civi\Firewall\Event\InvalidCSRFEvent::trigger($this->getIPAddress(), 'invalid token');
+      $this->setReason('invalidcsrf');
       return FALSE;
     }
     if (time() > $matches[1]) {
-      \Civi\Firewall\Event\InvalidCSRFEvent::trigger(Firewall::getIPAddress(), 'expired token');
+      \Civi\Firewall\Event\InvalidCSRFEvent::trigger($this->getIPAddress(), 'expired token');
+      $this->setReason('expiredcsrf');
       return FALSE;
     }
     $dataToHash = "$matches[1].$matches[2]." . CIVICRM_SITE_KEY;
-    $dataToHash .= Firewall::getIPAddress();
+    $dataToHash .= $this->getIPAddress();
     if ($matches[3] !== hash('sha256', $dataToHash)) {
-      \Civi\Firewall\Event\InvalidCSRFEvent::trigger(Firewall::getIPAddress(), 'tampered hash');
+      \Civi\Firewall\Event\InvalidCSRFEvent::trigger($this->getIPAddress(), 'tampered hash');
+      $this->setReason('tamperedcsrf');
       return FALSE;
     }
     // OK to continue...
     return TRUE;
   }
 
-  public static function getIPAddress() {
+  /**
+   * Get the IP address of the client. Based on the Drupal function. Support for reverse proxies and whitelists.
+   *
+   * @return string
+   */
+  public function getIPAddress(): string {
     if (!isset(\Civi::$statics[__CLASS__]['ipAddress'])) {
       $ipAddress = $_SERVER['REMOTE_ADDR'];
 

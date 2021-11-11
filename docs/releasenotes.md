@@ -12,6 +12,7 @@ Releases use the following numbering system:
 ## 1.3 (not yet released)
 
 * Convert Firewall to use non-static methods and provide a "reason" string on failure.
+* Fix [#17](https://lab.civicrm.org/extensions/firewall/-/issues/17) Compatibility with Symfony 4+.
 
 ## 1.2.1
 

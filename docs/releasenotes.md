@@ -9,6 +9,11 @@ Releases use the following numbering system:
 
 * **[BC]**: Items marked with [BC] indicate a breaking change that will require updates to your code if you are using that code in your extension.
 
+## 1.3
+
+* Convert Firewall to use non-static methods and provide a "reason" string on failure.
+* Fix [#17](https://lab.civicrm.org/extensions/firewall/-/issues/17) Compatibility with Symfony 4+.
+
 ## 1.2.1
 
 * Fix [#16](https://lab.civicrm.org/extensions/firewall/-/issues/16) Error: Class 'Civi\\Firewall\\Firewall' not found in...

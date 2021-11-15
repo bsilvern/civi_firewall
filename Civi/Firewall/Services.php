@@ -22,8 +22,12 @@ class Services {
 
   public static function registerServices(ContainerBuilder $container) {
     $container->addResource(new \Symfony\Component\Config\Resource\FileResource(__FILE__));
-    $container->setDefinition('firewall_fraudulent_request', new Definition('\Civi\Firewall\Listener\FraudulentRequest'));
-    $container->setDefinition('firewall_invalidcsrf_request', new Definition('\Civi\Firewall\Listener\InvalidCSRFRequest'));
+    $container
+      ->setDefinition('firewall_fraudulent_request', new Definition('\Civi\Firewall\Listener\FraudulentRequest'))
+      ->setPublic(TRUE);
+    $container
+      ->setDefinition('firewall_invalidcsrf_request', new Definition('\Civi\Firewall\Listener\InvalidCSRFRequest'))
+      ->setPublic(TRUE);
 
     foreach (self::getListenerSpecs() as $listenerSpec) {
       $container->findDefinition('dispatcher')->addMethodCall('addListenerService', $listenerSpec);

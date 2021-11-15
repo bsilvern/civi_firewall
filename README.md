@@ -1,8 +1,6 @@
-# firewall
+# Firewall
 
 This implements a simple firewall for CiviCRM that blocks by IP address in various scenarios.
-
-This is currently a very simple automatic solution with no config and no configuration. It is expected that will change in the future.
 
 The extension is licensed under [AGPL-3.0](LICENSE.txt).
 

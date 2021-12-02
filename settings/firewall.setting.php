@@ -87,14 +87,32 @@ return [
     'default' => '127.0.0.1,::1',
     'is_domain' => 1,
     'is_contact' => 0,
-    'title' => E::ts('List of IP addresses to whitelist'),
-    'description' => E::ts('List of IP addresses that will never be blocked'),
+    'title' => E::ts('List of IP addresses to always allow'),
+    'description' => E::ts('List of IP addresses that will never be blocked. For IPv4 can include wildcards eg. 192.168.*'),
     'html_attributes' => [
       'size' => 80,
     ],
     'settings_pages' => [
       'firewall' => [
         'weight' => 50,
+      ]
+    ],
+  ],
+  'firewall_blocklist_addresses' => [
+    'name' => 'firewall_blocklist_addresses',
+    'type' => 'String',
+    'html_type' => 'text',
+    'default' => '',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'title' => E::ts('List of IP addresses to block'),
+    'description' => E::ts('List of IP addresses that will always be blocked. For IPv4 can include wildcards eg. 192.168.*'),
+    'html_attributes' => [
+      'size' => 80,
+    ],
+    'settings_pages' => [
+      'firewall' => [
+        'weight' => 60,
       ]
     ],
   ],

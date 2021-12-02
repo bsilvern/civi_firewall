@@ -29,6 +29,13 @@ class Firewall {
   private $reasonDescription = '';
 
   /**
+   * The client IP address
+   *
+   * @var string
+   */
+  private $clientIP;
+
+  /**
    * @return string
    */
   public function getReason(): string {
@@ -53,6 +60,7 @@ class Firewall {
 
       case 'blockedfraud':
       case 'blockedinvalidcsrf':
+      case 'blockedblocklist':
       default:
         $this->setReasonDescription(E::ts('Blocked'));
     }
@@ -97,18 +105,22 @@ class Firewall {
     // @todo make these settings configurable.
     // If there are more than COUNT triggers for this event within time interval then block
     $interval = 'INTERVAL 2 HOUR';
-    $clientIP = $this->getIPAddress();
-    if (!isset($clientIP)) {
+    $this->clientIP = $this->getIPAddress();
+    if (!isset($this->clientIP)) {
       return FALSE;
     }
-    $whitelistIPAddresses = explode(',', \Civi::settings()->get('firewall_whitelist_addresses'));
-    if (in_array($clientIP, $whitelistIPAddresses)) {
+
+    if ($this->isClientIPOnSafelist()) {
       return FALSE;
+    }
+
+    if ($this->isClientIPOnBlocklist()) {
+      return TRUE;
     }
 
     $queryParams = [
       // The client IP address
-      1 => [$clientIP, 'String'],
+      1 => [$this->clientIP, 'String'],
     ];
     $blockFraudAfter = 5;
     $blockInvalidCSRFAfter = 5;
@@ -142,6 +154,62 @@ GROUP BY event_type
       }
     }
     return $block;
+  }
+
+  /**
+   * Given a list of IP addresses (optionally including wildcards eg. 192.* or 192.168.* or 192.168.11.*)
+   * Currently only supports ipv4 addresses
+   *
+   * @param array $ipAddresses
+   *
+   * @return bool
+   */
+  private function isWildcardIPV4Match(array $ipAddresses): bool {
+    $ipv4 = (strpos($this->clientIP, '.') !== FALSE);
+
+    if ($ipv4) {
+      $parts = explode(".", $this->clientIP);
+      $wilds = [
+        sprintf('%s.*', $parts[0]),
+      ];
+      if (!empty($parts[1])) {
+        $wilds[] = sprintf('%s.%s.*', $parts[0], $parts[1]);
+      }
+      if (!empty($parts[2])) {
+        $wilds[] = sprintf('%s.%s.%s.*', $parts[0], $parts[1], $parts[2]);
+      }
+      if ((bool) array_intersect($wilds, $ipAddresses)) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Does the client IP match a Safelist address? Can include wildcards for ipv4
+   *
+   * @return bool
+   */
+  private function isClientIPOnSafelist(): bool {
+    $safelistIPAddresses = explode(',', \Civi::settings()->get('firewall_whitelist_addresses'));
+    if (in_array($this->clientIP, $safelistIPAddresses) || $this->isWildcardIPV4Match($safelistIPAddresses)) {
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Does the client IP match a Blocklist address? Can include wildcards for ipv4
+   *
+   * @return bool
+   */
+  private function isClientIPOnBlocklist(): bool {
+    $blocklistIPAddresses = explode(',', \Civi::settings()->get('firewall_blocklist_addresses'));
+    if (in_array($this->clientIP, $blocklistIPAddresses) || $this->isWildcardIPV4Match($blocklistIPAddresses)) {
+      $this->setReason('blockedblocklist');
+      return TRUE;
+    }
+    return FALSE;
   }
 
   /**
@@ -219,7 +287,7 @@ GROUP BY event_type
   }
 
   /**
-   * Get the IP address of the client. Based on the Drupal function. Support for reverse proxies and whitelists.
+   * Get the IP address of the client. Based on the Drupal function. Support for reverse proxies and Safelists.
    *
    * @return string
    */

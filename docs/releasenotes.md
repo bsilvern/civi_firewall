@@ -22,7 +22,7 @@ Releases use the following numbering system:
 
 * Add settings page at *Administer->System Settings->Firewall*.
 * Improve method for retrieving client IP address (handle CiviCRM behind reverse proxy).
-* Implement IP address whitelist.
+* Implement IP address safe list.
 
 ## 1.1.3
 

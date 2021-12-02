@@ -10,8 +10,14 @@ use CRM_Firewall_ExtensionUtil as E;
  */
 function firewall_civicrm_config(&$config) {
   _firewall_civix_civicrm_config($config);
-  // Defaults are not loaded until *after* hook_civicrm_config is called by default
-  \Civi::service('settings_manager')->useDefaults();
+
+  // Symfony hook priorities - see https://docs.civicrm.org/dev/en/latest/hooks/usage/symfony/#priorities
+  // Run early
+  // civi.invoke.auth available from 5.36 - https://github.com/civicrm/civicrm-core/pull/19590/commits/e09616fd15aa438d4c904d3fb9da23b4893d1878
+  Civi::dispatcher()->addListener('civi.invoke.auth', 'firewall_civicrm_boot', 1000);
+}
+
+function firewall_civicrm_boot() {
   $firewall = new \Civi\Firewall\Firewall();
   $firewall->run();
 }

@@ -9,6 +9,11 @@ Releases use the following numbering system:
 
 * **[BC]**: Items marked with [BC] indicate a breaking change that will require updates to your code if you are using that code in your extension.
 
+## 1.4
+
+* Implement IP address block list and IPv4 wildcards for block/safelist (eg. 192.168.*).
+* Trigger firewall via `civi.invoke.auth` event. `hook_civicrm_config` can run too early and cause classloader issues - should fix [#18](https://lab.civicrm.org/extensions/firewall/-/issues/18).
+
 ## 1.3
 
 * Convert Firewall to use non-static methods and provide a "reason" string on failure.

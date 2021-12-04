@@ -293,7 +293,7 @@ GROUP BY event_type
    */
   public function getIPAddress(): string {
     if (!isset(\Civi::$statics[__CLASS__]['ipAddress'])) {
-      $ipAddress = $_SERVER['REMOTE_ADDR'];
+      $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '';
 
       if (\Civi::settings()->get('firewall_reverse_proxy')) {
         $reverseProxyHeader = \Civi::settings()->get('firewall_reverse_proxy_header');

@@ -9,6 +9,10 @@ Releases use the following numbering system:
 
 * **[BC]**: Items marked with [BC] indicate a breaking change that will require updates to your code if you are using that code in your extension.
 
+## 1.5
+
+* Don't use IP address to generate/validate CSRF tokens (the IP address may change during a client session, particularly on mobile networks).
+
 ## 1.4
 
 * Implement IP address block list and IPv4 wildcards for block/safelist (eg. 192.168.*).

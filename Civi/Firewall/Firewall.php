@@ -237,8 +237,6 @@ GROUP BY event_type
     $publicToken = "$validTo.$random.";
     $dataToHash = $publicToken . $privateKey;
 
-    $dataToHash .= $this->getIPAddress();
-
     // This is the token that we send to the browser, that it must send back.
     $publicToken .= hash('sha256', $dataToHash);
     return $publicToken;
@@ -276,7 +274,6 @@ GROUP BY event_type
       return FALSE;
     }
     $dataToHash = "$matches[1].$matches[2]." . CIVICRM_SITE_KEY;
-    $dataToHash .= $this->getIPAddress();
     if ($matches[3] !== hash('sha256', $dataToHash)) {
       \Civi\Firewall\Event\InvalidCSRFEvent::trigger($this->getIPAddress(), 'tampered hash');
       $this->setReason('tamperedcsrf');

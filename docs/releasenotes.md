@@ -9,6 +9,11 @@ Releases use the following numbering system:
 
 * **[BC]**: Items marked with [BC] indicate a breaking change that will require updates to your code if you are using that code in your extension.
 
+## 1.5.1
+
+* Improve documentation.
+* Improve return values from Job.firewall_cleanup.
+
 ## 1.5
 
 * Don't use IP address to generate/validate CSRF tokens (the IP address may change during a client session, particularly on mobile networks).

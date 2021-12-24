@@ -8,11 +8,20 @@ See: https://docs.civicrm.org/sysadmin/en/latest/customize/extensions/#installin
 
 Configure via **Administer->System Settings->Firewall Settings**
 
-## Usage
+## Setup
 
-## Administration
+### Scheduled Jobs
 
-* Job.Firewall_cleanup: There is a scheduled job which cleans old entries from the `civicrm_firewall_ipaddress` table after 1 month.
+#### Job.Firewall_cleanup
+
+This job automatically removes old entries from the `civicrm_firewall_ipaddress` table after 1 month.
+
+* Run: Daily
+* Domain-specific: No. This job only needs to be run on one of the domains for multisite/multidomain setup.
+
+If this job is *not* running then the `civicrm_firewall_ipaddress` table will gradually increase in size.
+
+### Settings
 
 #### CSRF validity
 

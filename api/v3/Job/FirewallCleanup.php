@@ -1,4 +1,7 @@
 <?php
+
+use Civi\Api4\FirewallIpaddress;
+
 /**
  * This job performs various housekeeping actions related to the Firewall
  *
@@ -9,17 +12,20 @@
  * @throws CiviCRM_API3_Exception
  */
 function civicrm_api3_job_firewall_cleanup($params) {
-  $results = [];
+  $results = [
+    'deleted' => 0,
+  ];
 
   if (!empty($params['delete_old_ipaddress'])) {
     // Delete all locally recorded paymentIntents that are older than 3 months
-    $results = \Civi\Api4\FirewallIpaddress::delete()
+    $deletedFirewallIpaddresses = FirewallIpaddress::delete()
       ->setCheckPermissions(FALSE)
       ->addWhere('access_date', '<', $params['delete_old_ipaddress'])
       ->execute();
+    $results['deleted'] = $deletedFirewallIpaddresses->count();
   }
 
-  return civicrm_api3_create_success((array) $results, $params);
+  return civicrm_api3_create_success($results, $params);
 }
 
 /**

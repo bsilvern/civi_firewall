@@ -122,8 +122,61 @@ class Firewall {
       // The client IP address
       1 => [$this->clientIP, 'String'],
     ];
-    $blockFraudAfter = 5;
-    $blockInvalidCSRFAfter = 5;
+
+
+    //block only contribution-related requests
+    $url_transact = $_SERVER['SCRIPT_URL'] == '/drupal/civicrm/contribute/transact'; //includes GETs and POSTs
+    $post_rest = $_SERVER['SCRIPT_URL'] == '/drupal/civicrm/ajax/rest' && ($_POST['entity'] ?? '') == 'StripePaymentintent';
+    if (!$url_transact && !$post_rest) {
+      return FALSE; //not contribution related
+    } 
+
+    function email_notify($state) {
+      $tpl_params['subject'] = "Card Tester Status: $state";
+      $tpl_params['body'] = 'Sent by firewall/Civi/Firewall/Firewall.php';
+      $ret = \CRM_Core_BAO_MessageTemplate::sendTemplate([
+        'tplParams' => $tpl_params, //array of smarty variables (tokens): include in email as {$variable_name}
+
+        //USER-SPECIFIC DETAILS
+        //'messageTemplateID' => ***, //specify a suitable template number
+        //'toEmail' => '***',
+        //'toName' => '***', 
+        //'from' => '***',
+      ]);
+    }
+
+    //Test if we are under attack (if Stipe failures during $failed_lookback_period exceed $failed_threshold)
+    $card_tester_active = \Civi::settings()->get('card_tester_active');
+    $failed_lookback_period = "INTERVAL 12 HOUR";
+    $failed_threshold = 10;
+    $sql = "
+      SELECT COUNT(id) failed_count FROM civicrm_stripe_paymentintent 
+      WHERE created_date >= DATE_SUB(NOW(), $failed_lookback_period) AND status = 'failed';";
+    $failed_count = \CRM_Core_DAO::singleValueQuery($sql);
+    if ($failed_count > $failed_threshold) {
+      //Number of recent failed Stripe transactions is over threshold. Looks like we're under attack, so we'll:
+      //  Decrease the failure thresholds for blocking
+      //  Increase the lookback interval for failures
+      $blockFraudAfter = 2;
+      $blockInvalidCSRFAfter = 2;
+      $blockOtherAfter = 2;
+      $interval = 'INTERVAL 24 HOUR';
+      if (!$card_tester_active) {
+        \Civi::settings()->set('card_tester_active', "1");
+        \Civi::settings()->set('forceRecaptcha', "1");
+        email_notify('Active');
+      }
+    } else {
+      $blockFraudAfter = 5;
+      $blockInvalidCSRFAfter = 5;
+      $blockOtherAfter = 20;
+      if ($card_tester_active) {
+        \Civi::settings()->set('card_tester_active', "0");
+        \Civi::settings()->set('forceRecaptcha', "0");
+        email_notify('Inactive');
+      }
+    }
+
 
     $sql = "
 SELECT COUNT(*) as eventCount,event_type FROM `civicrm_firewall_ipaddress`
@@ -148,6 +201,16 @@ GROUP BY event_type
           if ($dao->eventCount >= $blockInvalidCSRFAfter) {
             $block = TRUE;
             $this->setReason('blockedinvalidcsrf');
+            break 2;
+          }
+          break;
+
+        
+        //Block IPs which had excessive declined payments due to any other reason (commonly 'generic_decline')
+        default: 
+          if ($dao->eventCount >= $blockOtherAfter) {
+            $block = TRUE;
+            $this->setReason('blockedother');
             break 2;
           }
           break;
@@ -230,7 +293,8 @@ GROUP BY event_type
    * @throws \Exception
    */
   public function generateCSRFToken(): string {
-    $validTo = time() + (int) \Civi::settings()->get('firewall_csrf_timeout');
+    //Apply CSRF expiration time when it is checked rather than when it is generated
+    $validTo = time();
     $random = bin2hex(random_bytes(12));
     $privateKey = CIVICRM_SITE_KEY;
 
@@ -268,7 +332,10 @@ GROUP BY event_type
       $this->setReason('invalidcsrf');
       return FALSE;
     }
-    if (time() > $matches[1]) {
+    //Reduce CSRF timeout if we're under attack
+    $card_tester_active = \Civi::settings()->get('card_tester_active');
+    $timeout = $card_tester_active ? 1800 : (int)\Civi::settings()->get('firewall_csrf_timeout');  
+    if (time() > ($matches[1] + $timeout)) {
       \Civi\Firewall\Event\InvalidCSRFEvent::trigger($this->getIPAddress(), 'expired token');
       $this->setReason('expiredcsrf');
       return FALSE;
